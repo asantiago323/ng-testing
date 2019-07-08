@@ -1,4 +1,4 @@
-import {async, ComponentFixture, fakeAsync, flush, flushMicrotasks, TestBed} from '@angular/core/testing';
+import {async, ComponentFixture, fakeAsync, flush, TestBed, tick, flushMicrotasks} from '@angular/core/testing';
 import {CoursesModule} from '../courses.module';
 import {DebugElement} from '@angular/core';
 
@@ -21,6 +21,9 @@ describe('HomeComponent', () => {
   let fixture: ComponentFixture<HomeComponent>;
   let component:HomeComponent;
   let el: DebugElement;
+  let coursesService: any;
+  const beginnerCourses = setupCourses().filter(course => course.category === 'BEGINNER');
+  const advancedCourses = setupCourses().filter(course => course.category === 'ADVANCED');
 
   beforeEach(async(() => {
     const coursesServiceSpy = jasmine.createSpyObj('CoursesService', ['findAllCourses']);
@@ -39,6 +42,7 @@ describe('HomeComponent', () => {
         fixture = TestBed.createComponent(HomeComponent);
         component = fixture.componentInstance;
         el = fixture.debugElement;
+        coursesService = TestBed.get(CoursesService);
     });
 
   }));
@@ -52,31 +56,52 @@ describe('HomeComponent', () => {
 
   it('should display only beginner courses', () => {
 
-    pending();
+    coursesService.findAllCourses.and.returnValue(of(beginnerCourses));
+    fixture.detectChanges();
+    const tabs = el.queryAll(By.css('.mat-tab-label'));
+    expect(tabs.length).toBe(1, 'Unexpected number of tabs found');
 
   });
 
 
   it('should display only advanced courses', () => {
 
-      pending();
+    coursesService.findAllCourses.and.returnValue(of(advancedCourses));
+    fixture.detectChanges();
+    const tabs = el.queryAll(By.css('.mat-tab-label'));
+    expect(tabs.length).toBe(1, 'Unexpected number of tabs found');
 
   });
 
 
   it('should display both tabs', () => {
 
-    pending();
+    coursesService.findAllCourses.and.returnValue(of(setupCourses()));
+    fixture.detectChanges();
+    const tabs = el.queryAll(By.css('.mat-tab-label'));
+    expect(tabs.length).toBe(2, 'Expected 2 tabs to be found');
 
   });
 
 
-  it('should display advanced courses when tab clicked', () => {
+  it('should display advanced courses when tab clicked', fakeAsync(() => {
+    let titles;
+    coursesService.findAllCourses.and.returnValue(of(setupCourses()));
+    fixture.detectChanges();
+    const tabs = el.queryAll(By.css('.mat-tab-label'));
 
-    pending();
+    click(tabs[1]);
 
-  });
+    fixture.detectChanges();
 
+    flush();
+
+    titles = el.queryAll(By.css('.mat-card-title'));
+
+    expect(titles.length).toBeGreaterThan(0, 'Could not find card titles');
+    expect(titles[0].nativeElement.textContent).toContain('Angular Security Course');
+
+  }));
 });
 
 
